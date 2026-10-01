@@ -106,6 +106,7 @@ def download(
     period: int | None = None,
     fd: str | None = None,
     td: str | None = None,
+    stmt_url: str | None = None,
 ) -> bytes:
     """2-step FlexQueryReport download process.
 
@@ -121,6 +122,10 @@ def download(
                 365 days apart), sent as the ``fd``/``td`` SendRequest
                 parameters; must be given together. ``period`` and
                 ``fd``/``td`` are mutually exclusive.
+        stmt_url: Optional GetStatement URL to poll instead of the ``Url``
+                  that SendRequest returns. Lets a caller avoid a host whose
+                  DNS is failing, since IB serves GetStatement from both
+                  ndcdyn and gdcdyn.
     """
     stmt_access = request_statement(
         token, query_id, period=period, fd=fd, td=td
@@ -131,7 +136,7 @@ def download(
         time.sleep(status)
         tries += 1
         response = submit_request(
-            url=stmt_access.Url or STMT_URL,
+            url=stmt_url or stmt_access.Url or STMT_URL,
             token=token,
             query=stmt_access.ReferenceCode,
         )

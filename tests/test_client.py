@@ -149,6 +149,21 @@ class DownloadTestCase(unittest.TestCase):
         response = parser.parse(BytesIO(output))
         self.assertIsInstance(response, Types.FlexQueryResponse)
 
+    def test_stmt_url_override(self, mock_requests_get: Mock):
+        #  `stmt_url` replaces the GetStatement host that SendRequest returns;
+        #  SendRequest itself still goes to REQUEST_URL.
+        stmt_url = "https://ndcdyn.interactivebrokers.com/AccountManagement/FlexWebService/GetStatement"
+        client.download(
+            token="DEADBEEF",
+            query_id="0987654321",
+            stmt_url=stmt_url,
+        )
+
+        self.assertEqual(
+            [c.args[0] for c in mock_requests_get.call_args_list],
+            [client.REQUEST_URL, stmt_url],
+        )
+
 
 @patch("requests.get", side_effect=mock_response)
 class DateRangeOverrideTestCase(unittest.TestCase):
